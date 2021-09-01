@@ -25,26 +25,83 @@ ClockReplacer::~ClockReplacer() = default;
 bool ClockReplacer::Victim(frame_id_t *frame_id) { 
 
 
-    return false; 
+    if(Size()==0){
+
+        victimize_start_flag =0; 
+        return false;
+    }
+        
+
+    // list <frame_id_t> :: iterator frame_id_location ;
+
+    if(victimize_start_flag==0){
+
+        clock_hand = clockFrames.begin();   
+        victimize_start_flag = 1;
+
+    }
+
+    while(reference_flag[*clock_hand]==1){
+                
+        reference_flag[*clock_hand]=0;
+        clock_hand++;
+
+        if(clock_hand == clockFrames.end()){
+            
+            clock_hand = clockFrames.begin();
+        }
+    }
+    // cout<<"Crossed while loop\n";
+    *frame_id = *clock_hand;
+    // cout<<*frame_id<<endl;
+    auto temp = clock_hand;
+    clock_hand++;
+    clockFrames.erase(temp);
+    clockFramesLocation.erase(*frame_id);
+    reference_flag.erase(*frame_id);
+
+    return true;   
     
 }
 
 void ClockReplacer::Pin(frame_id_t frame_id) {
 
-    auto frame_id_location = clockFramesLocation[frame_id];
-    clockFrames.erase(frame_id_location);
-    reference_flag.erase(frame_id);
+    // cout<<"Pin\n";
+
+    if(clockFramesLocation.find(frame_id)!=clockFramesLocation.end()){
+
+        
+        auto frame_id_location = clockFramesLocation[frame_id];
+
+        if(clock_hand==frame_id_location){
+            clock_hand++;
+        }
+
+        clockFrames.erase(frame_id_location);
+        reference_flag.erase(frame_id);
+        clockFramesLocation.erase(frame_id);
+    }
+    
 
 }
 
 void ClockReplacer::Unpin(frame_id_t frame_id) {
 
-    clockFrames.push_back(frame_id);
-    reference_flag[frame_id] = 0;
-    auto frame_id_location = clockFrames.end();
-    frame_id_location--;
-    clockFramesLocation[frame_id] =  frame_id_location;
+    // cout<<"Unpin\n";
+    if(clockFramesLocation.find(frame_id)==clockFramesLocation.end()){
 
+        clockFrames.push_back(frame_id);
+        reference_flag[frame_id] = 1;
+        auto frame_id_location = clockFrames.end();
+        frame_id_location--;
+        clockFramesLocation[frame_id] =  frame_id_location;
+
+    }
+    else
+    {
+        reference_flag[frame_id] = 1;
+    }
+    
 }
 
 size_t ClockReplacer::Size() {

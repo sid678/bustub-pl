@@ -56,6 +56,8 @@ class ClockReplacer : public Replacer {
 
  private:
 
+  int victimize_start_flag=0;
+  list<frame_id_t> :: iterator clock_hand;
   size_t mx_size;
   list<frame_id_t>clockFrames;
   unordered_map<frame_id_t,list<frame_id_t>::iterator>clockFramesLocation;
