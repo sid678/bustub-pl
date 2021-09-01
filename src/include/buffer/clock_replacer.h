@@ -15,10 +15,16 @@
 #include <list>
 #include <mutex>  // NOLINT
 #include <vector>
+#include <unordered_map>
+
 
 #include "buffer/replacer.h"
 #include "common/config.h"
 
+
+
+
+using namespace std;
 namespace bustub {
 
 /**
@@ -46,6 +52,11 @@ class ClockReplacer : public Replacer {
   size_t Size() override;
 
  private:
+
+  size_t mx_size;
+  list<frame_id_t>clockFrames;
+  unordered_map<frame_id_t,list<frame_id_t>::iterator>clockFramesLocation;
+  unordered_map<frame_id_t,bool>reference_flag;
   // TODO(student): implement me!
 };
 
