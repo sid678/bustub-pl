@@ -59,4 +59,17 @@ TEST(ClockReplacerTest, DISABLED_SampleTest) {
   EXPECT_EQ(4, value);
 }
 
+//Test to check unpinning
+TEST(ClockReplacerTest, SampleTest) {
+
+  ClockReplacer clock_replacer(7);
+
+  
+  clock_replacer.Unpin(1);
+  clock_replacer.Unpin(2);
+
+  clock_replacer.display_clockFrames();
+  
+}
+
 }  // namespace bustub

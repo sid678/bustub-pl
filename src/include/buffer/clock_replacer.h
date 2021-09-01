@@ -16,7 +16,8 @@
 #include <mutex>  // NOLINT
 #include <vector>
 #include <unordered_map>
-
+#include <map>
+#include <iostream>
 
 #include "buffer/replacer.h"
 #include "common/config.h"
@@ -51,12 +52,14 @@ class ClockReplacer : public Replacer {
 
   size_t Size() override;
 
+  void display_clockFrames();
+
  private:
 
   size_t mx_size;
   list<frame_id_t>clockFrames;
   unordered_map<frame_id_t,list<frame_id_t>::iterator>clockFramesLocation;
-  unordered_map<frame_id_t,bool>reference_flag;
+  map<frame_id_t,bool>reference_flag;
  
 };
 
