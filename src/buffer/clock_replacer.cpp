@@ -30,7 +30,10 @@ bool ClockReplacer::Victim(frame_id_t *frame_id) {
         victimize_start_flag =0; 
         return false;
     }
-        
+    if(clock_hand == clockFrames.end())
+    {
+        clock_hand = clockFrames.begin();
+    }
 
     // list <frame_id_t> :: iterator frame_id_location ;
 
