@@ -59,7 +59,7 @@ TEST(ClockReplacerTest, DISABLED_SampleTest) {
   EXPECT_EQ(4, value);
 }
 
-//Test to check unpinning
+//Test to check unpinning and pinning
 TEST(ClockReplacerTest, SampleTest) {
 
   ClockReplacer clock_replacer(7);
@@ -67,6 +67,13 @@ TEST(ClockReplacerTest, SampleTest) {
   
   clock_replacer.Unpin(1);
   clock_replacer.Unpin(2);
+  clock_replacer.Unpin(3);
+  clock_replacer.Unpin(4);
+  clock_replacer.Unpin(5);
+  clock_replacer.Unpin(6);
+  clock_replacer.Pin(5);
+  clock_replacer.Pin(3);
+  clock_replacer.Unpin(7);
 
   clock_replacer.display_clockFrames();
   
