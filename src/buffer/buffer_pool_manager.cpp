@@ -12,6 +12,8 @@
 
 #include "buffer/buffer_pool_manager.h"
 
+
+
 #include <list>
 #include <unordered_map>
 
@@ -57,11 +59,39 @@ Page *BufferPoolManager::FetchPageImpl(page_id_t page_id) {
     return &pages_[frame_id];
 
   }
+  else if(!free_list_.empty())
+  {
+    frame_id = free_list_.front();
+    free_list_.pop_front();
+  }
+  else
+  {
+    if(replacer_->Victim(&frame_id))
+    {
+      Page *R = &pages_[frame_id]; 
+      if(R->IsDirty())
+      {
+        //Write to disk;
+        R->is_dirty_ = false;
+        disk_manager_->WritePage(R->GetPageId(), R->GetData());
+      }
+    }
+    else
+    {
+      return nullptr;
+    }
+  }
+  //change R value to P's values
+  //P's values come from disk
   
+  disk_manager_->ReadPage(page_id,pages_[frame_id].GetData());
+
+  pages_[frame_id].page_id_ = page_id;
+  pages_[frame_id].pin_count_ = 1;
+  pages_[frame_id].is_dirty_ = false;
+
+  return &pages_[frame_id];
   
-
-
-  return nullptr;
 }
 
 bool BufferPoolManager::UnpinPageImpl(page_id_t page_id, bool is_dirty) { return false; }
