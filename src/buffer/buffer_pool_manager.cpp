@@ -81,6 +81,7 @@ Page *BufferPoolManager::FetchPageImpl(page_id_t page_id) {
       return nullptr;
     }
   }
+  page_table_[page_id] = frame_id;
   //change R value to P's values
   //P's values come from disk
   
@@ -91,14 +92,51 @@ Page *BufferPoolManager::FetchPageImpl(page_id_t page_id) {
   pages_[frame_id].is_dirty_ = false;
 
   return &pages_[frame_id];
-  
+
 }
 
-bool BufferPoolManager::UnpinPageImpl(page_id_t page_id, bool is_dirty) { return false; }
+bool BufferPoolManager::UnpinPageImpl(page_id_t page_id, bool is_dirty) { 
+
+  if(page_table_.find(page_id)==page_table_.end()){
+
+    return false;
+  }
+
+  frame_id_t frame_id= page_table_[page_id];
+  Page *P = &pages_[frame_id];
+  P->pin_count_--;
+
+  if(P->pin_count_ < 0){
+    P->pin_count_ = 0;
+  }
+
+  if(P->IsDirty()){
+
+      P->is_dirty_ = false;
+      disk_manager_->WritePage(P->GetPageId(), P->GetData());
+  }
+
+  if(P->GetPinCount()==0){
+
+    replacer_->Unpin(frame_id);  
+  }
+
+  return true; 
+}
 
 bool BufferPoolManager::FlushPageImpl(page_id_t page_id) {
   // Make sure you call DiskManager::WritePage!
-  return false;
+  if(page_table_.find(page_id)!=page_table_.end()){
+
+    return false;
+  }
+
+  frame_id_t frame_id = page_table_[page_id];
+  Page *P = &pages_[frame_id];
+  disk_manager_->WritePage(page_id,P->GetData());
+  P->is_dirty_ = false;
+
+  return true;
 }
 
 Page *BufferPoolManager::NewPageImpl(page_id_t *page_id) {
@@ -120,6 +158,12 @@ bool BufferPoolManager::DeletePageImpl(page_id_t page_id) {
 }
 
 void BufferPoolManager::FlushAllPagesImpl() {
+
+  for(auto it = page_table_.begin();it != page_table_.end();++it){
+
+    FlushPageImpl(it->first);
+  }
+  
   // You can do it!
 }
 
