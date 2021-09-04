@@ -200,11 +200,12 @@ bool BufferPoolManager::DeletePageImpl(page_id_t page_id) {
     if(pages_[frame_id].GetPinCount()>0){
 
       return false;
-
     }
   }
   Page *P = &pages_[frame_id];
-
+  page_table_.erase(page_id);
+  P->ResetMemory();
+  free_list_.push_back(frame_id);
 
   return true;
 }
