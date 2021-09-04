@@ -223,7 +223,6 @@ void BufferPoolManager::FlushAllPagesImpl() {
     FlushPageImpl(it->first);
   }
   
-  // You can do it!
 }
 
 }  // namespace bustub
