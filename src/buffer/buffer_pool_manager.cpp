@@ -13,7 +13,6 @@
 #include "buffer/buffer_pool_manager.h"
 
 
-
 #include <list>
 #include <unordered_map>
 
@@ -67,18 +66,22 @@ Page *BufferPoolManager::FetchPageImpl(page_id_t page_id) {
   else{
 
     if(replacer_->Victim(&frame_id)){
+
       Page *R = &pages_[frame_id]; 
       if(R->IsDirty()){
         //Write to disk;
         R->is_dirty_ = false;
         disk_manager_->WritePage(R->GetPageId(), R->GetData());
       }
+      page_table_.erase(R->GetPageId());
+
     }
     else{
 
       return nullptr;
     }
   }
+  
   page_table_[page_id] = frame_id;
   //change R value to P's values
   //P's values come from disk
