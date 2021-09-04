@@ -64,27 +64,25 @@ Page *BufferPoolManager::FetchPageImpl(page_id_t page_id) {
     frame_id = free_list_.front();
     free_list_.pop_front();
   }
-  else
-  {
-    if(replacer_->Victim(&frame_id))
-    {
+  else{
+
+    if(replacer_->Victim(&frame_id)){
       Page *R = &pages_[frame_id]; 
-      if(R->IsDirty())
-      {
+      if(R->IsDirty()){
         //Write to disk;
         R->is_dirty_ = false;
         disk_manager_->WritePage(R->GetPageId(), R->GetData());
       }
     }
-    else
-    {
+    else{
+
       return nullptr;
     }
   }
   page_table_[page_id] = frame_id;
   //change R value to P's values
   //P's values come from disk
-  
+  replacer_->Pin(frame_id);
   disk_manager_->ReadPage(page_id,pages_[frame_id].GetData());
 
   pages_[frame_id].page_id_ = page_id;
@@ -145,7 +143,41 @@ Page *BufferPoolManager::NewPageImpl(page_id_t *page_id) {
   // 2.   Pick a victim page P from either the free list or the replacer. Always pick from the free list first.
   // 3.   Update P's metadata, zero out memory and add P to the page table.
   // 4.   Set the page ID output parameter. Return a pointer to P.
-  return nullptr;
+  *page_id = disk_manager_->AllocatePage();
+  frame_id_t frame_id;
+
+  if(!free_list_.empty()){
+    
+    frame_id = free_list_.front();
+    free_list_.pop_front();
+    
+
+  }
+  else if(replacer_->Victim(&frame_id)){
+
+    Page *P = &pages_[frame_id];
+    
+    if(P->IsDirty()){
+
+      P->is_dirty_ = false;
+      disk_manager_->WritePage(P->GetPageId(), P->GetData());
+
+    }
+    P->ResetMemory();
+    
+  }
+  else{
+
+    return nullptr;
+  }
+
+  page_table_[*page_id] = frame_id;
+  replacer_->Pin(frame_id);
+  pages_[frame_id].page_id_ = *page_id;
+  pages_[frame_id].pin_count_ = 1;
+  pages_[frame_id].is_dirty_ = false;
+
+  return &pages_[frame_id];
 }
 
 bool BufferPoolManager::DeletePageImpl(page_id_t page_id) {
@@ -154,7 +186,27 @@ bool BufferPoolManager::DeletePageImpl(page_id_t page_id) {
   // 1.   If P does not exist, return true.
   // 2.   If P exists, but has a non-zero pin-count, return false. Someone is using the page.
   // 3.   Otherwise, P can be deleted. Remove P from the page table, reset its metadata and return it to the free list.
-  return false;
+
+  disk_manager_->DeallocatePage(page_id);
+  frame_id_t frame_id;
+
+  if(page_table_.find(page_id)==page_table_.end()){
+
+    return true;
+  }
+  else {
+
+    frame_id = page_table_[page_id]; 
+    if(pages_[frame_id].GetPinCount()>0){
+
+      return false;
+
+    }
+  }
+  Page *P = &pages_[frame_id];
+
+
+  return true;
 }
 
 void BufferPoolManager::FlushAllPagesImpl() {
