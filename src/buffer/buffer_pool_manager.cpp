@@ -203,6 +203,9 @@ bool BufferPoolManager::DeletePageImpl(page_id_t page_id) {
     }
   }
   Page *P = &pages_[frame_id];
+  P->is_dirty_ = false;
+  P->pin_count_ = 0;
+  P->page_id_ = INVALID_PAGE_ID;
   page_table_.erase(page_id);
   P->ResetMemory();
   free_list_.push_back(frame_id);
