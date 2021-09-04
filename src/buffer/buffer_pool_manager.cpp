@@ -62,7 +62,7 @@ Page *BufferPoolManager::FetchPageImpl(page_id_t page_id) {
 
       Page *R = &pages_[frame_id]; 
       if(R->IsDirty()){
-        //Write to disk;
+        
         R->is_dirty_ = false;
         disk_manager_->WritePage(R->GetPageId(), R->GetData());
       }
@@ -118,7 +118,7 @@ bool BufferPoolManager::UnpinPageImpl(page_id_t page_id, bool is_dirty) {
 }
 
 bool BufferPoolManager::FlushPageImpl(page_id_t page_id) {
-  // Make sure you call DiskManager::WritePage!
+
   if(page_table_.find(page_id)!=page_table_.end()){
 
     return false;
